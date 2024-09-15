@@ -164,7 +164,8 @@
         fetch(PROXY_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0' // Add the User-Agent header here
             },
             body: new URLSearchParams(data)
         })
