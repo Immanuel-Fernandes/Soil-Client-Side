@@ -1,109 +1,201 @@
+
 <!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Crop Recommendation System</title>
-        <!-- Link to external CSS -->
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <form id="cropForm">
-            <h2>Crop Recommendation System 2024 🌱</h2>
-            <div class="inputBox">
-                <input type="number" id="N" name="N" min="0" max="100" placeholder="Enter Nitrogen" required>
-            </div>
-        
-            <div class="inputBox">
-                <input type="number" id="P" name="P" min="0" max="100" placeholder="Enter Phosphorus" required>
-            </div>
-        
-            <div class="inputBox">
-                <input type="number" id="K" name="K" min="0" max="100" placeholder="Enter Potassium" required>
-            </div>
-        
-            <div class="inputBox">
-                <input type="number" id="temperature" name="temperature" min="0" max="50" step="0.1" placeholder="Enter Temperature (°C)" required>
-            </div>
-        
-            <div class="inputBox">
-                <input type="number" id="humidity" name="humidity" min="0" max="100" step="0.1" placeholder="Enter Humidity (%)" required>
-            </div>
-        
-            <div class="inputBox">
-                <input type="number" id="ph" name="ph" min="0" max="14" step="0.1" placeholder="Enter pH" required>
-            </div>
-        
-            <div class="inputBox">
-                <input type="number" id="rainfall" name="rainfall" min="0" max="500" step="0.1" placeholder="Enter Rainfall (mm)" required>
-            </div>
-        
-            <div class="inputBox">
-                <input type="submit" value="Predict" id="tryNowButton">
-            </div>   
-        
-            <div id="result" class="result"></div>
-            <div id="spinner" class="spinner hidden"></div>
-        </form>
-        
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crop Recommendation System</title>
 
-        <!-- Link to external JavaScript -->
-        <script>
-            document.getElementById('cropForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 20;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-    // Show the spinner
-    const spinner = document.getElementById('spinner');
-    spinner.classList.remove('hidden');
-
-    // Hide the spinner after 2 minutes (120000 ms)
-    const hideSpinnerTimeout = setTimeout(() => {
-        spinner.classList.add('hidden');
-        document.getElementById('result').textContent = 'Request timed out. Please try again.';
-        document.getElementById('result').classList.add('error');
-    }, 180000);
-
-    // Fetch form values
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
-    data.api_key = "Environmental-Intelligence-59474eabe4b1bce29af462945f2ff41f"; // Pass the API key
-
-    // API URL for the server-side proxy
-    const PROXY_URL = "http://soil-enthusiasts.liveblog365.com/CR2.php";
-
-    // Send POST request to the server-side proxy
-    fetch(PROXY_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        clearTimeout(hideSpinnerTimeout); // Clear the timeout if the request completes before 2 minutes
-
-        // Hide the spinner
-        spinner.classList.add('hidden');
-
-        if (result.crop) {
-            document.getElementById('result').textContent = `The best crop to be cultivated is: ${result.crop}`;
-            document.getElementById('result').classList.add('success');
-        } else {
-            document.getElementById('result').textContent = result.error || 'Sorry, we could not determine the best crop to be cultivated with the provided data.';
-            document.getElementById('result').classList.add('error');
         }
-    })
-    .catch(error => {
-        clearTimeout(hideSpinnerTimeout); // Clear the timeout if an error occurs
 
-        // Hide the spinner
-        spinner.classList.add('hidden');
+        form {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+        }
 
-        document.getElementById('result').textContent = 'Failed to get a response from the API server.';
-        document.getElementById('result').classList.add('error');
+        h2 {
+            margin-top: 0;
+            color: #4CAF50; /* Green */
+            text-align: center;
+        }
+
+        .inputBox {
+            margin-bottom: 15px;
+        }
+
+        .inputBox input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+        }
+
+        #tryNowButton {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        #tryNowButton:hover {
+            background-color: #45a049; /* Darker green */
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            color: #333; /* Black text for regular results */
+        }
+
+        .result.success {
+            color: #4CAF50; /* Green for successful results */
+        }
+
+        .result.error {
+            color: #f00; /* Red for errors */
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #4CAF50; /* Green */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            top: 50%;
+            left: 30%;
+            transform: translate(-50%, -50%);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<form id="cropForm">
+    <h2>Crop Recommendation System 🌱</h2>
+    <div class="inputBox">
+        <input type="number" id="N" name="N" min="0" max="100" placeholder="Enter Nitrogen" required>
+    </div>
+
+    <div class="inputBox">
+        <input type="number" id="P" name="P" min="0" max="100" placeholder="Enter Phosphorus" required>
+    </div>
+
+    <div class="inputBox">
+        <input type="number" id="K" name="K" min="0" max="100" placeholder="Enter Potassium" required>
+    </div>
+
+    <div class="inputBox">
+        <input type="number" id="temperature" name="temperature" min="0" max="50" step="0.1" placeholder="Enter Temperature (°C)" required>
+    </div>
+
+    <div class="inputBox">
+        <input type="number" id="humidity" name="humidity" min="0" max="100" step="0.1" placeholder="Enter Humidity (%)" required>
+    </div>
+
+    <div class="inputBox">
+        <input type="number" id="ph" name="ph" min="0" max="14" step="0.1" placeholder="Enter pH" required>
+    </div>
+
+    <div class="inputBox">
+        <input type="number" id="rainfall" name="rainfall" min="0" max="500" step="0.1" placeholder="Enter Rainfall (mm)" required>
+    </div>
+
+    <div class="inputBox">
+        <input type="submit" value="Predict" id="tryNowButton">
+    </div>   
+
+    <div id="result" class="result"></div>
+    <div id="spinner" class="spinner hidden"></div>
+</form>
+
+<script>
+    document.getElementById('cropForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Show the spinner
+        const spinner = document.getElementById('spinner');
+        spinner.classList.remove('hidden');
+
+        // Hide the spinner after 2 minutes (120000 ms)
+        const hideSpinnerTimeout = setTimeout(() => {
+            spinner.classList.add('hidden');
+            document.getElementById('result').textContent = 'Request timed out. Please try again.';
+            document.getElementById('result').classList.add('error');
+        }, 120000);
+
+        // Fetch form values
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        data.api_key = "Environmental-Intelligence-1f3359051002da2129a3a7937ea542ef"; // Pass the API key
+
+        // API URL for the server-side proxy
+        const PROXY_URL = "http://localhost/Movie/FarmSoil/CR2.php";
+
+        // Send POST request to the server-side proxy
+        fetch(PROXY_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            clearTimeout(hideSpinnerTimeout); // Clear the timeout if the request completes before 2 minutes
+
+            // Hide the spinner
+            spinner.classList.add('hidden');
+
+            if (result.crop) {
+                document.getElementById('result').textContent = `The best crop to be cultivated is: ${result.crop}`;
+                document.getElementById('result').classList.add('success');
+            } else {
+                document.getElementById('result').textContent = result.error || 'Sorry, we could not determine the best crop to be cultivated with the provided data.';
+                document.getElementById('result').classList.add('error');
+            }
+        })
+        .catch(error => {
+            clearTimeout(hideSpinnerTimeout); // Clear the timeout if an error occurs
+
+            // Hide the spinner
+            spinner.classList.add('hidden');
+
+            document.getElementById('result').textContent = 'Failed to get a response from the API server.';
+            document.getElementById('result').classList.add('error');
+        });
     });
-});
-        </script>
-    </body>
+</script>
+
+</body>
 </html>
